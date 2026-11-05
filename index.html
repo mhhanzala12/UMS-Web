@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Universal Media Studio — Download &amp; Media Utility</title>
+  <meta name="description" content="Universal Media Studio is a local desktop app for media downloading, conversion, and a music hub, built with PySide6 and QML." />
+  <meta name="theme-color" content="#0a0c09" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c5f04a'/%3E%3Cpath d='M8 14v4M12 10v12M16 7v18M20 11v10M24 14v4' stroke='%230a0c09' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E" />
+
+  <style>
+    /* ---------- Theme ---------- */
+    :root {
+      --bg: #0a0c09;
+      --panel: #0b0d0a;
+      --code: #070906;
+      --lime: #c5f04a;
+      --lime-2: #d4f76a;
+      --text: #e7ebe2;
+      --soft: #b9beb1;
+      --muted: #8d9386;
+      --dim: #6f7568;
+      --line: rgba(255, 255, 255, 0.1);
+      --line-soft: rgba(255, 255, 255, 0.05);
+      color-scheme: dark;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    h1, h2, h3, h4, p { margin: 0; }
+    ::selection { background: rgba(197, 240, 74, 0.35); color: var(--bg); }
+    ::-webkit-scrollbar { width: 10px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #232820; border-radius: 999px; border: 2px solid var(--bg); }
+
+    .container { width: min(1200px, 100% - 2.5rem); margin-inline: auto; }
+    .section { position: relative; padding: 6rem 0; border-top: 1px solid var(--line-soft); }
+    .eyebrow { font-size: 0.75rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--lime); }
+    .section-title { margin-top: 0.75rem; font-size: clamp(1.9rem, 4vw, 2.5rem); font-weight: 600; letter-spacing: -0.02em; color: #fff; line-height: 1.15; }
+    .section-desc { margin-top: 1rem; color: var(--muted); font-size: 1rem; }
+    .section-head { max-width: 42rem; margin: 0 auto; text-align: center; }
+
+    .icon {
+      width: 20px; height: 20px; flex-shrink: 0;
+      fill: none; stroke: currentColor; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .icon-sm { width: 16px; height: 16px; }
+    .icon-xs { width: 12px; height: 12px; }
+
+    /* ---------- Logo & badge ---------- */
+    .logo {
+      display: flex; align-items: center; justify-content: center; gap: 2px;
+      width: 40px; height: 40px; border-radius: 12px; background: var(--lime);
+      box-shadow: 0 0 24px -4px rgba(197, 240, 74, 0.6); flex-shrink: 0;
+    }
+    .logo.sm { width: 32px; height: 32px; border-radius: 10px; }
+    .logo span {
+      display: block; width: 2px; height: var(--h); border-radius: 2px; background: var(--bg);
+      transform-origin: center;
+      animation: wave 1.4s ease-in-out infinite;
+      animation-delay: var(--d);
+    }
+    .logo.sm span { transform-origin: center; }
+    @keyframes wave { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+
+    .badge {
+      display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 6px;
+      border: 1px solid rgba(197, 240, 74, 0.3); background: rgba(197, 240, 74, 0.1);
+      color: var(--lime); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.75rem 1.25rem; border-radius: 12px; border: 1px solid transparent;
+      font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .btn-primary { background: var(--lime); color: var(--bg); box-shadow: 0 0 40px -8px rgba(197, 240, 74, 0.6); }
+    .btn-primary:hover { background: var(--lime-2); }
+    .btn-ghost { background: rgba(255, 255, 255, 0.03); border-color: var(--line); color: #fff; }
+    .btn-ghost:hover { border-color: rgba(197, 240, 74, 0.4); }
+    .btn-sm { padding: 0.5rem 1rem; font-size: 0.85rem; box-shadow: none; }
+
+    /* ---------- Header ---------- */
+    .site-header {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(10, 12, 9, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .nav-inner { height: 64px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .brand { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-name { display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 600; color: #fff; }
+    .brand-sub { display: block; font-size: 0.7rem; color: var(--dim); line-height: 1.2; }
+    .nav-links { display: flex; gap: 1.75rem; }
+    .nav-links a { font-size: 0.9rem; color: var(--muted); transition: color 0.2s; }
+    .nav-links a:hover { color: #fff; }
+    .menu-btn {
+      display: none; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line);
+      background: none; color: #fff; cursor: pointer;
+    }
+
+    /* ---------- Hero ---------- */
+    .hero { position: relative; overflow: hidden; padding: 6rem 0 5rem; }
+    .grid-bg {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(197, 240, 74, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(197, 240, 74, 0.035) 1px, transparent 1px);
+      background-size: 56px 56px;
+      -webkit-mask-image: radial-gradient(ellipse at top, black 30%, transparent 75%);
+      mask-image: radial-gradient(ellipse at top, black 30%, transparent 75%);
+    }
+    .glow {
+      position: absolute; top: -160px; left: 50%; transform: translateX(-50%);
+      width: 820px; max-width: 150%; height: 520px; pointer-events: none;
+      background: radial-gradient(closest-side, rgba(197, 240, 74, 0.2), transparent);
+      animation: glow 6s ease-in-out infinite;
+    }
+    @keyframes glow { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.95; } }
+    .hero-inner { position: relative; text-align: center; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.85rem; border-radius: 999px;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: var(--soft); font-size: 0.8rem;
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 8px var(--lime); display: inline-block; }
+    .hero h1 {
+      margin-top: 1.5rem; font-size: clamp(2.75rem, 7vw, 4.5rem); font-weight: 600;
+      letter-spacing: -0.03em; line-height: 1.05; color: #fff;
+    }
+    .hero h1 em { font-style: normal; color: var(--lime); }
+    .lead { max-width: 42rem; margin: 1.5rem auto 0; font-size: 1.125rem; color: var(--muted); }
+    .hero-actions { margin-top: 2.25rem; display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+    .platforms { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: center; font-size: 0.8rem; color: var(--dim); }
+    .platforms .sep { opacity: 0.5; }
+
+    /* ---------- App mockup ---------- */
+    .mockup-wrap { position: relative; max-width: 1000px; margin: 4rem auto 0; }
+    .mockup-wrap::before {
+      content: ""; position: absolute; inset: -24px -40px; z-index: -1; border-radius: 2rem;
+      background: linear-gradient(to bottom, rgba(197, 240, 74, 0.2), rgba(197, 240, 74, 0.05), transparent);
+      filter: blur(28px);
+    }
+    .app {
+      border: 1px solid var(--line); border-radius: 16px; background: var(--panel); overflow: hidden;
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+      text-align: left;
+    }
+    .app-bar {
+      height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+      padding: 0 0.75rem; background: var(--bg); border-bottom: 1px solid var(--line-soft);
+    }
+    .dots { display: flex; gap: 6px; }
+    .dots span { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); }
+    .app-search-top {
+      display: flex; align-items: center; gap: 0.5rem; height: 28px; width: min(288px, 60%);
+      padding: 0 0.6rem; border-radius: 8px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03);
+      color: var(--dim); font-size: 11px;
+    }
+    .app-search-top .kbd { margin-left: auto; padding: 0 4px; border-radius: 4px; border: 1px solid var(--line); font-size: 9px; }
+    .app-body { display: flex; min-height: 420px; }
+    .app-side {
+      width: 56px; padding: 0.5rem; display: flex; flex-direction: column;
+      border-right: 1px solid var(--line-soft); background: var(--bg);
+    }
+    .app-side .brand-mini { display: flex; align-items: center; gap: 8px; padding: 0 4px; margin-bottom: 1rem; }
+    .app-side .brand-mini .txt { display: none; }
+    .nav-item {
+      position: relative; display: flex; align-items: center; gap: 10px; padding: 8px;
+      border-radius: 8px; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden;
+    }
+    .nav-item .label { display: none; }
+    .nav-item.active {
+      background: rgba(197, 240, 74, 0.1); color: #fff; box-shadow: inset 0 0 0 1px rgba(197, 240, 74, 0.25);
+    }
+    .nav-item.active .icon { color: var(--lime); }
+    .nav-item.active::before {
+      content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; border-radius: 2px; background: var(--lime);
+    }
+    .app-side .folder { margin-top: auto; display: none; padding-top: 0.75rem; border-top: 1px solid var(--line-soft); font-size: 9px; color: var(--dim); }
+    .app-main { flex: 1; min-width: 0; padding: 1.25rem; }
+    .search-box {
+      display: flex; align-items: center; gap: 0.6rem; padding: 6px 6px 6px 12px;
+      border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03);
+    }
+    .search-box .ph { flex: 1; min-width: 0; font-size: 12px; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .search-box .go { padding: 6px 12px; border-radius: 8px; background: var(--lime); color: var(--bg); font-size: 11px; font-weight: 600; }
+    .chips { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: var(--soft); font-size: 10px;
+    }
+    .chip .dot { width: 5px; height: 5px; box-shadow: none; }
+    .mini-label { margin-top: 1.5rem; font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+    .recent { margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 8px; }
+    .recent span {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: #d4d9cc; font-size: 11px;
+    }
+    .rows { margin-top: 1.5rem; display: grid; gap: 8px; }
+    .row {
+      display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px;
+      border: 1px solid var(--line-soft); background: rgba(255, 255, 255, 0.02);
+    }
+    .art {
+      width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, rgba(197, 240, 74, 0.3), #2a3320); color: var(--lime);
+    }
+    .row .meta { flex: 1; min-width: 0; }
+    .row .t { font-size: 11px; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row .a { font-size: 10px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row .d { font-size: 10px; color: var(--dim); display: none; }
+    .row .state {
+      padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; border: 1px solid var(--line); color: var(--soft);
+    }
+    .row .state.queued { background: var(--lime); border-color: transparent; color: var(--bg); }
+
+    /* ---------- Feature cards ---------- */
+    .grid-4 { display: grid; gap: 1.25rem; grid-template-columns: repeat(4, 1fr); }
+    .grid-3 { display: grid; gap: 1.25rem; grid-template-columns: repeat(3, 1fr); }
+    .grid-2 { display: grid; gap: 1.25rem; grid-template-columns: repeat(2, 1fr); }
+    .card {
+      position: relative; overflow: hidden; padding: 1.5rem; border-radius: 16px;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02);
+      transition: transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+    }
+    .card:hover { transform: translateY(-4px); border-color: rgba(197, 240, 74, 0.35); background: rgba(255, 255, 255, 0.04); }
+    .card .glow-dot {
+      position: absolute; right: -40px; top: -40px; width: 128px; height: 128px; border-radius: 50%;
+      background: radial-gradient(closest-side, rgba(197, 240, 74, 0.18), transparent); opacity: 0; transition: opacity 0.5s;
+    }
+    .card:hover .glow-dot { opacity: 1; }
+    .icon-box {
+      width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(197, 240, 74, 0.25); background: rgba(197, 240, 74, 0.1); color: var(--lime);
+    }
+    .icon-box.solid { background: var(--lime); color: var(--bg); border: none; }
+    .icon-box.sm { width: 36px; height: 36px; border-radius: 10px; border: none; background: rgba(197, 240, 74, 0.1); }
+    .card h3 { position: relative; margin-top: 1.25rem; font-size: 1.1rem; font-weight: 600; color: #fff; }
+    .card p { position: relative; margin-top: 0.5rem; font-size: 0.9rem; color: var(--muted); }
+    .card ul { position: relative; list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: 0.6rem; }
+    .card li { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.875rem; color: var(--soft); }
+    .tick {
+      width: 16px; height: 16px; flex-shrink: 0; margin-top: 3px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; background: rgba(197, 240, 74, 0.15); color: var(--lime);
+    }
+    .tick .icon { width: 10px; height: 10px; stroke-width: 3; }
+
+    /* ---------- Music hub ---------- */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: center; }
+    .hub-copy h2 { font-size: clamp(1.9rem, 4vw, 2.5rem); }
+    .hub-copy p.lead-sm { margin-top: 1.25rem; color: var(--muted); }
+    .pills { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .pill-lg {
+      display: inline-flex; align-items: center; gap: 0.5rem; padding: 6px 14px; border-radius: 999px;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: #d4d9cc; font-size: 0.9rem;
+    }
+    .feat-list { margin: 2rem 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .feat-list li { display: flex; gap: 0.75rem; }
+    .feat-list strong { display: block; font-size: 0.9rem; color: #fff; font-weight: 600; }
+    .feat-list span { font-size: 0.875rem; color: var(--muted); }
+    .panel {
+      padding: 1.5rem; border-radius: 16px; border: 1px solid var(--line); background: var(--panel);
+      box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.8);
+    }
+    .panel-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+    .panel-head h3 { font-size: 1.5rem; font-weight: 600; color: #fff; }
+    .panel-head p { margin-top: 0.25rem; font-size: 0.875rem; color: var(--dim); }
+    .seg { display: flex; padding: 4px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); font-size: 0.8rem; }
+    .seg span { display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border-radius: 8px; color: var(--muted); }
+    .seg span.on { background: rgba(255, 255, 255, 0.1); color: #fff; }
+    .seg span.on b { color: var(--lime); font-weight: 600; }
+    .empty {
+      margin-top: 2rem; padding: 3.5rem 1.5rem; text-align: center; border-radius: 12px;
+      border: 1px dashed var(--line); display: flex; flex-direction: column; align-items: center;
+    }
+    .empty h4 { margin-top: 1.25rem; font-size: 1rem; font-weight: 600; color: #fff; }
+    .empty p { margin-top: 0.5rem; max-width: 20rem; font-size: 0.875rem; color: var(--muted); }
+    .empty .btn { margin-top: 1.5rem; }
+
+    /* ---------- How it works ---------- */
+    .step { padding: 1.75rem; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(to bottom, rgba(255, 255, 255, 0.04), transparent); }
+    .step-top { display: flex; align-items: center; justify-content: space-between; }
+    .step-n { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.875rem; color: rgba(197, 240, 74, 0.7); }
+    .step h3 { margin-top: 1.5rem; font-size: 1.1rem; font-weight: 600; color: #fff; }
+    .step p { margin-top: 0.5rem; font-size: 0.9rem; color: var(--muted); }
+
+    /* ---------- Install ---------- */
+    .install-wrap { max-width: 56rem; margin: 3rem auto 0; }
+    .tablist {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 6px; border-radius: 16px;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02);
+    }
+    .tab {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+      padding: 0.7rem 1rem; border-radius: 12px; border: none; background: none; cursor: pointer;
+      font: inherit; font-size: 0.9rem; font-weight: 500; color: var(--muted); transition: all 0.2s;
+    }
+    .tab:hover { color: #fff; }
+    .tab[aria-selected="true"] { background: var(--lime); color: var(--bg); box-shadow: 0 0 24px -6px rgba(197, 240, 74, 0.7); }
+    .tab-panel {
+      margin-top: 1.5rem; padding: 2rem; border-radius: 16px; border: 1px solid var(--line); background: var(--panel);
+    }
+    .tab-panel[hidden] { display: none; }
+    .tab-panel h3 { font-size: 1.15rem; font-weight: 600; color: #fff; }
+    .tab-panel > p { margin-top: 0.5rem; font-size: 0.9rem; color: var(--muted); }
+    .steps-ol { margin: 1rem 0 0; padding-left: 1.25rem; color: var(--soft); font-size: 0.9rem; display: grid; gap: 0.5rem; }
+    .sub-title { margin: 2rem 0 0.75rem; font-size: 0.9rem; font-weight: 600; color: #fff; }
+    code.inline {
+      padding: 2px 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.06);
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.85em; color: var(--lime);
+    }
+    .code { border: 1px solid var(--line); border-radius: 12px; background: var(--code); overflow: hidden; }
+    .code-head {
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+      padding: 0.6rem 1rem; border-bottom: 1px solid var(--line-soft);
+    }
+    .code-head span { font-size: 0.8rem; color: var(--muted); }
+    .copy {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04); color: var(--soft);
+      font: inherit; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s;
+    }
+    .copy:hover { border-color: rgba(197, 240, 74, 0.4); color: #fff; }
+    .copy.done { color: var(--lime); border-color: rgba(197, 240, 74, 0.4); }
+    pre {
+      margin: 0; padding: 1rem 1.25rem; overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 13px; line-height: 1.8; color: #d7f59a;
+    }
+    .notice {
+      display: flex; gap: 0.75rem; margin-top: 1.25rem; padding: 1rem; border-radius: 12px;
+      border: 1px solid rgba(197, 240, 74, 0.2); background: rgba(197, 240, 74, 0.05); color: #d4d9cc; font-size: 0.9rem;
+    }
+    .notice .icon { color: var(--lime); margin-top: 2px; }
+
+    /* ---------- Requirements ---------- */
+    .req { padding: 1.25rem; border-radius: 16px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); }
+    .req h3 { margin-top: 1rem; font-size: 0.95rem; font-weight: 600; color: #fff; }
+    .req p { margin-top: 0.35rem; font-size: 0.875rem; color: var(--muted); }
+    .two-col { margin-top: 3rem; display: grid; gap: 1.5rem; grid-template-columns: 3fr 2fr; }
+    .two-col h3 { margin-bottom: 0.75rem; font-size: 0.95rem; font-weight: 600; color: #fff; }
+    .trouble { padding: 1rem; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); }
+    .trouble + .trouble { margin-top: 1rem; }
+    .trouble h4 { font-size: 0.9rem; font-weight: 600; color: #fff; }
+    .trouble p { margin-top: 0.25rem; font-size: 0.875rem; color: var(--muted); }
+    .stack { display: grid; gap: 1rem; align-content: start; }
+
+    /* ---------- Responsible use ---------- */
+    .ethics {
+      max-width: 56rem; margin: 0 auto; padding: 2.5rem; border-radius: 16px; text-align: center;
+      border: 1px solid rgba(197, 240, 74, 0.25);
+      background: linear-gradient(135deg, rgba(197, 240, 74, 0.1), transparent 60%);
+    }
+    .ethics .icon-box { margin: 0 auto; width: 48px; height: 48px; border-radius: 16px; }
+    .ethics h3 { margin-top: 1.25rem; font-size: 1.25rem; font-weight: 600; color: #fff; }
+    .ethics p { max-width: 42rem; margin: 0.75rem auto 0; font-size: 0.9rem; color: var(--soft); }
+
+    /* ---------- Footer ---------- */
+    .site-footer { border-top: 1px solid var(--line-soft); padding: 2.5rem 0; }
+    .foot-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; }
+    .foot-links { display: flex; flex-wrap: wrap; gap: 1.5rem; justify-content: center; font-size: 0.9rem; color: var(--muted); }
+    .foot-links a:hover { color: #fff; }
+    .foot-note { font-size: 0.75rem; color: var(--dim); }
+
+    /* ---------- Scroll reveal (only when JS is on) ---------- */
+    .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .js .reveal.in { opacity: 1; transform: none; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1024px) {
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .split { grid-template-columns: 1fr; gap: 2.5rem; }
+      .two-col { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 860px) {
+      .nav-links {
+        display: none; position: absolute; top: 64px; left: 0; right: 0; flex-direction: column; gap: 0;
+        padding: 0.5rem 1.25rem 1rem; background: var(--bg); border-bottom: 1px solid var(--line);
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { padding: 0.75rem 0; border-bottom: 1px solid var(--line-soft); }
+      .menu-btn { display: inline-flex; }
+      .nav-cta { display: none; }
+      .grid-3 { grid-template-columns: 1fr; }
+      .section { padding: 4.5rem 0; }
+    }
+    @media (min-width: 640px) {
+      .app-side { width: 192px; padding: 0.75rem; }
+      .app-side .brand-mini .txt { display: block; }
+      .nav-item { font-size: 11px; padding: 8px; }
+      .nav-item .label { display: inline; }
+      .app-side .folder { display: block; }
+      .row .d { display: inline; }
+      .app-main { padding: 1.5rem; }
+    }
+    @media (max-width: 640px) {
+      .grid-4, .grid-2, .feat-list { grid-template-columns: 1fr; }
+      .app-side { width: 56px; }
+      .app-search-top { display: none; }
+      .app-body { min-height: 360px; }
+      .tab { font-size: 0.8rem; padding: 0.6rem 0.5rem; }
+      .tab-panel { padding: 1.25rem; }
+      .ethics { padding: 1.75rem; }
+      .panel { padding: 1.1rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important; animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important; scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Icon sprite (inline SVG symbols) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+    <symbol id="i-library" viewBox="0 0 24 24"><path d="m16 6 4 14"/><path d="M12 6v14"/><path d="M8 8v12"/><path d="M4 4v16"/></symbol>
+    <symbol id="i-playlist" viewBox="0 0 24 24"><path d="M21 15V6"/><path d="M18.5 18a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/><path d="M12 12H3"/><path d="M16 6H3"/><path d="M12 18H3"/></symbol>
+    <symbol id="i-convert" viewBox="0 0 24 24"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></symbol>
+    <symbol id="i-film" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18"/><path d="M7 2v20M17 2v20M2 12h20M2 7h5M2 17h5M17 17h5M17 7h5"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  </svg>
+
+  <!-- ============ Header ============ -->
+  <header class="site-header">
+    <div class="container nav-inner">
+      <a href="#top" class="brand">
+        <div class="logo sm" aria-hidden="true">
+          <span style="--h:11px;--d:0s"></span><span style="--h:18px;--d:.12s"></span><span style="--h:22px;--d:.24s"></span>
+          <span style="--h:14px;--d:.36s"></span><span style="--h:20px;--d:.48s"></span><span style="--h:12px;--d:.6s"></span><span style="--h:16px;--d:.72s"></span>
+        </div>
+        <div>
+          <div class="brand-name">Media Studio <span class="badge">UMS</span></div>
+          <span class="brand-sub">Universal Media Studio</span>
+        </div>
+      </a>
+
+      <nav class="nav-links" id="nav-links">
+        <a href="#features">Features</a>
+        <a href="#hub">Music Hub</a>
+        <a href="#how">How it works</a>
+        <a href="#install">Install</a>
+        <a href="#requirements">Requirements</a>
+      </nav>
+
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <a href="#install" class="btn btn-primary btn-sm nav-cta">
+          <svg class="icon icon-sm"><use href="#i-download"/></svg> Get the app
+        </a>
+        <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
+          <svg class="icon"><use href="#i-menu"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ Hero ============ -->
+    <section class="hero">
+      <div class="grid-bg" aria-hidden="true"></div>
+      <div class="glow" aria-hidden="true"></div>
+
+      <div class="container hero-inner reveal">
+        <span class="pill"><span class="dot"></span> Local desktop app · PySide6 + QML · Python 3.10+</span>
+        <h1>Universal <em>Media</em> Studio</h1>
+        <p class="lead">
+          One local desktop utility for media downloading, conversion, and a music hub. Inspect URLs, queue downloads
+          with yt-dlp, convert files with FFmpeg, and manage your offline audio library and playlists.
+        </p>
+        <div class="hero-actions">
+          <a href="#install" class="btn btn-primary">
+            <svg class="icon icon-sm"><use href="#i-download"/></svg> Install on Windows
+          </a>
+          <a href="#install" class="btn btn-ghost">
+            <svg class="icon icon-sm"><use href="#i-terminal"/></svg> Run from source
+          </a>
+        </div>
+        <p class="platforms">
+          <span>Windows 10/11</span><span class="sep">•</span><span>Linux</span><span class="sep">•</span><span>macOS</span><span class="sep">•</span><span>Free &amp; local</span>
+        </p>
+
+        <!-- App window mockup -->
+        <div class="mockup-wrap">
+          <div class="app" role="img" aria-label="Preview of the Universal Media Studio window">
+            <div class="app-bar">
+              <div class="dots"><span></span><span></span><span></span></div>
+              <div class="app-search-top">
+                <svg class="icon icon-xs"><use href="#i-search"/></svg>
+                <span>Search or paste link...</span>
+                <span class="kbd">Ctrl+K</span>
+              </div>
+              <div style="width:48px"></div>
+            </div>
+
+            <div class="app-body">
+              <aside class="app-side">
+                <div class="brand-mini">
+                  <div class="logo sm" style="width:24px;height:24px;border-radius:7px">
+                    <span style="--h:8px;--d:0s"></span><span style="--h:13px;--d:.12s"></span><span style="--h:16px;--d:.24s"></span><span style="--h:10px;--d:.36s"></span>
+                  </div>
+                  <div class="txt">
+                    <div style="font-size:12px;font-weight:600;color:#fff">Media Studio <span class="badge">UMS</span></div>
+                    <div style="font-size:10px;color:var(--dim)">Music downloader</div>
+                  </div>
+                </div>
+                <div class="nav-item active"><svg class="icon icon-sm"><use href="#i-search"/></svg><span class="label">Search &amp; Explore</span></div>
+                <div class="nav-item"><svg class="icon icon-sm"><use href="#i-link"/></svg><span class="label">Downloader</span></div>
+                <div class="nav-item"><svg class="icon icon-sm"><use href="#i-download"/></svg><span class="label">Downloads</span></div>
+                <div class="nav-item"><svg class="icon icon-sm"><use href="#i-library"/></svg><span class="label">Library</span></div>
+                <div class="nav-item"><svg class="icon icon-sm"><use href="#i-playlist"/></svg><span class="label">Playlists</span></div>
+                <div class="nav-item"><svg class="icon icon-sm"><use href="#i-convert"/></svg><span class="label">Converter</span></div>
+                <div class="nav-item"><svg class="icon icon-sm"><use href="#i-settings"/></svg><span class="label">Settings</span></div>
+                <div class="folder">
+                  <div style="display:flex;justify-content:space-between"><span>Downloads folder</span><span style="color:var(--lime)">Change</span></div>
+                  <div style="margin-top:6px;padding:6px 8px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">C:\Users\you\Downloads\UMS</div>
+                </div>
+              </aside>
+
+              <div class="app-main">
+                <div class="search-box">
+                  <svg class="icon icon-sm" style="color:var(--lime)"><use href="#i-search"/></svg>
+                  <span class="ph">Search for a track, album or artist — or paste a Spotify link</span>
+                  <span class="go">Search →</span>
+                </div>
+
+                <div class="chips">
+                  <span class="chip"><span class="dot"></span>Spotify</span>
+                  <span class="chip"><span class="dot"></span>YouTube Music</span>
+                  <span class="chip"><span class="dot"></span>SoundCloud</span>
+                  <span class="chip"><span class="dot"></span>Deezer</span>
+                  <span class="chip"><span class="dot"></span>Apple Music</span>
+                </div>
+
+                <p class="mini-label">Recent searches</p>
+                <div class="recent">
+                  <span><svg class="icon icon-xs"><use href="#i-search"/></svg>kinda homeless funk</span>
+                  <span><svg class="icon icon-xs"><use href="#i-search"/></svg>kinda</span>
+                  <span><svg class="icon icon-xs"><use href="#i-search"/></svg>homeless funk</span>
+                  <span><svg class="icon icon-xs"><use href="#i-search"/></svg>gooner</span>
+                </div>
+
+                <div class="rows">
+                  <div class="row">
+                    <div class="art"><svg class="icon icon-sm"><use href="#i-music"/></svg></div>
+                    <div class="meta"><div class="t">Midnight Drive</div><div class="a">Nova Keys</div></div>
+                    <span class="d">3:42</span>
+                    <span class="state queued">Queued</span>
+                  </div>
+                  <div class="row">
+                    <div class="art"><svg class="icon icon-sm"><use href="#i-music"/></svg></div>
+                    <div class="meta"><div class="t">Glass Coastline</div><div class="a">Ilse &amp; The Wave</div></div>
+                    <span class="d">4:08</span>
+                    <span class="state">Download</span>
+                  </div>
+                  <div class="row">
+                    <div class="art"><svg class="icon icon-sm"><use href="#i-music"/></svg></div>
+                    <div class="meta"><div class="t">Neon Orchard</div><div class="a">Pale Transit</div></div>
+                    <span class="d">2:57</span>
+                    <span class="state">Download</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Features ============ -->
+    <section id="features" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Features</p>
+          <h2 class="section-title">Everything your media workflow needs</h2>
+          <p class="section-desc">Four focused tools, one desktop app. Built for people who want control over their local media.</p>
+        </div>
+
+        <div class="grid-4 reveal" style="margin-top:3.5rem">
+          <article class="card">
+            <div class="glow-dot"></div>
+            <div class="icon-box"><svg class="icon"><use href="#i-link"/></svg></div>
+            <h3>Downloader</h3>
+            <p>Inspect supported media URLs, choose source quality and output formats, and queue downloads with yt-dlp.</p>
+            <ul>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Quality &amp; format selection</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Background download queue</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Browser cookie profiles</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="glow-dot"></div>
+            <div class="icon-box"><svg class="icon"><use href="#i-convert"/></svg></div>
+            <h3>Media Converter</h3>
+            <p>Convert local audio and video files with FFmpeg without leaving the app.</p>
+            <ul>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Audio &amp; video conversion</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>FFmpeg / FFprobe powered</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Reusable download presets</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="glow-dot"></div>
+            <div class="icon-box"><svg class="icon"><use href="#i-music"/></svg></div>
+            <h3>Music Hub</h3>
+            <p>Search music catalogs, resolve public Spotify metadata, and fetch matching audio for your library.</p>
+            <ul>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Track, album &amp; playlist metadata</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Local audio library</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Custom playlists</li>
+            </ul>
+          </article>
+
+          <article class="card">
+            <div class="glow-dot"></div>
+            <div class="icon-box"><svg class="icon"><use href="#i-layers"/></svg></div>
+            <h3>Queue &amp; Settings</h3>
+            <p>Monitor background tasks and configure output folders, connections, cookies, and presets.</p>
+            <ul>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Live task monitoring</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Output folder control</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Connection &amp; cookie settings</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Music Hub ============ -->
+    <section id="hub" class="section">
+      <div class="container split">
+        <div class="hub-copy reveal">
+          <p class="eyebrow">Music Hub</p>
+          <h2 class="section-title" style="margin-top:.75rem">Search, resolve, and build your own offline library</h2>
+          <p class="lead-sm">
+            Search by track, album, or artist — or paste a public Spotify link. Universal Media Studio resolves the
+            metadata, finds matching audio with yt-dlp, and keeps everything organized in a local library you control.
+          </p>
+
+          <div class="pills">
+            <span class="pill-lg"><span class="dot"></span>Spotify</span>
+            <span class="pill-lg"><span class="dot"></span>YouTube Music</span>
+            <span class="pill-lg"><span class="dot"></span>SoundCloud</span>
+            <span class="pill-lg"><span class="dot"></span>Deezer</span>
+            <span class="pill-lg"><span class="dot"></span>Apple Music</span>
+          </div>
+
+          <ul class="feat-list">
+            <li>
+              <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-library"/></svg></span>
+              <div><strong>Local library</strong><span>Scan and browse audio you've saved.</span></div>
+            </li>
+            <li>
+              <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-playlist"/></svg></span>
+              <div><strong>Playlists</strong><span>Group tracks into playlists you own.</span></div>
+            </li>
+            <li>
+              <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-search"/></svg></span>
+              <div><strong>Metadata lookup</strong><span>Public track, album &amp; playlist info.</span></div>
+            </li>
+            <li>
+              <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-download"/></svg></span>
+              <div><strong>Matched audio</strong><span>yt-dlp fetches the best match.</span></div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="panel reveal">
+          <div class="panel-head">
+            <div>
+              <h3>Downloads</h3>
+              <p id="finished-count">0 finished</p>
+            </div>
+            <div class="seg" role="presentation">
+              <span class="on">All <b>0</b></span>
+              <span>Downloading <b style="color:var(--dim)">0</b></span>
+              <span>Completed <b style="color:var(--dim)">0</b></span>
+            </div>
+          </div>
+
+          <div class="empty">
+            <div class="icon-box"><svg class="icon"><use href="#i-download"/></svg></div>
+            <h4>No downloads yet</h4>
+            <p>Search for a track, album, or artist to start building your offline music library.</p>
+            <a href="#features" class="btn btn-primary">
+              <svg class="icon icon-sm"><use href="#i-search"/></svg> Search &amp; Explore
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ How it works ============ -->
+    <section id="how" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">How it works</p>
+          <h2 class="section-title">From link to library in three steps</h2>
+        </div>
+
+        <div class="grid-3 reveal" style="margin-top:3.5rem">
+          <div class="step">
+            <div class="step-top">
+              <div class="icon-box solid"><svg class="icon"><use href="#i-search"/></svg></div>
+              <span class="step-n">01</span>
+            </div>
+            <h3>Search or paste a link</h3>
+            <p>Look up a track, album, or artist, or paste a supported media URL in the Downloader.</p>
+          </div>
+          <div class="step">
+            <div class="step-top">
+              <div class="icon-box solid"><svg class="icon"><use href="#i-settings"/></svg></div>
+              <span class="step-n">02</span>
+            </div>
+            <h3>Pick quality &amp; format</h3>
+            <p>Choose the source quality and output format, or apply one of your saved presets.</p>
+          </div>
+          <div class="step">
+            <div class="step-top">
+              <div class="icon-box solid"><svg class="icon"><use href="#i-layers"/></svg></div>
+              <span class="step-n">03</span>
+            </div>
+            <h3>Queue &amp; organize</h3>
+            <p>Track progress in the queue, then manage your library and playlists when downloads finish.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Install ============ -->
+    <section id="install" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Install</p>
+          <h2 class="section-title">Get Universal Media Studio running</h2>
+          <p class="section-desc">Clone the repository and launch the app with a single script, or set it up manually.</p>
+        </div>
+
+        <div class="install-wrap reveal">
+          <div class="tablist" role="tablist" aria-label="Install options">
+            <button class="tab" role="tab" id="tab-win" aria-controls="panel-win" aria-selected="true" data-tab="win">
+              <svg class="icon icon-sm"><use href="#i-terminal"/></svg> Windows
+            </button>
+            <button class="tab" role="tab" id="tab-linux" aria-controls="panel-linux" aria-selected="false" tabindex="-1" data-tab="linux">
+              <svg class="icon icon-sm"><use href="#i-terminal"/></svg> Linux
+            </button>
+            <button class="tab" role="tab" id="tab-build" aria-controls="panel-build" aria-selected="false" tabindex="-1" data-tab="build">
+              <svg class="icon icon-sm"><use href="#i-download"/></svg> Build .exe
+            </button>
+          </div>
+
+          <!-- Windows -->
+          <div class="tab-panel" role="tabpanel" id="panel-win" aria-labelledby="tab-win">
+            <h3>Quick start with the launcher</h3>
+            <ol class="steps-ol">
+              <li>Clone the repository and open its folder.</li>
+              <li>Run <code class="inline">run_windows.bat</code> — it creates <code class="inline">.venv</code>, installs requirements, and starts the app.</li>
+            </ol>
+
+            <p class="sub-title">Or set up manually</p>
+            <div class="code">
+              <div class="code-head"><span>PowerShell / Command Prompt</span><button class="copy" data-copy="win-code"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
+<pre id="win-code">py -3 -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python app.py</pre>
+            </div>
+          </div>
+
+          <!-- Linux -->
+          <div class="tab-panel" role="tabpanel" id="panel-linux" aria-labelledby="tab-linux" hidden>
+            <h3>Set up a virtual environment</h3>
+            <p>Run <code class="inline">run_linux.sh</code> for the development launcher, or follow the manual steps below.</p>
+
+            <p class="sub-title">Terminal</p>
+            <div class="code">
+              <div class="code-head"><span>Terminal</span><button class="copy" data-copy="linux-code"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
+<pre id="linux-code">python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python app.py</pre>
+            </div>
+          </div>
+
+          <!-- Build -->
+          <div class="tab-panel" role="tabpanel" id="panel-build" aria-labelledby="tab-build" hidden>
+            <h3>Build a standalone Windows executable</h3>
+            <p>
+              The included builder installs dependencies and PyInstaller in <code class="inline">.venv</code>, bundles the QML
+              interface, and produces an onedir build for faster startup and easy troubleshooting.
+            </p>
+
+            <p class="sub-title">Command Prompt</p>
+            <div class="code">
+              <div class="code-head"><span>Command Prompt</span><button class="copy" data-copy="build-code"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
+<pre id="build-code">builder.bat
+
+# Output:
+# dist/Universal Media Studio/Universal Media Studio.exe</pre>
+            </div>
+
+            <div class="notice">
+              <svg class="icon icon-sm"><use href="#i-alert"/></svg>
+              <p>Distribute the entire output folder, not just the executable. FFmpeg can be bundled from project-local locations or installed on your system PATH.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Requirements ============ -->
+    <section id="requirements" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Requirements</p>
+          <h2 class="section-title">What you need</h2>
+          <p class="section-desc">Lightweight, local, and built from open tools.</p>
+        </div>
+
+        <div class="grid-4 reveal" style="margin-top:3.5rem">
+          <div class="req">
+            <div class="icon-box sm"><svg class="icon icon-sm"><use href="#i-terminal"/></svg></div>
+            <h3>Operating system</h3>
+            <p>Windows 10/11, Linux, or macOS</p>
+          </div>
+          <div class="req">
+            <div class="icon-box sm"><svg class="icon icon-sm"><use href="#i-terminal"/></svg></div>
+            <h3>Python</h3>
+            <p>Python 3.10 or newer</p>
+          </div>
+          <div class="req">
+            <div class="icon-box sm"><svg class="icon icon-sm"><use href="#i-film"/></svg></div>
+            <h3>FFmpeg &amp; FFprobe</h3>
+            <p>On PATH for conversion and audio post-processing</p>
+          </div>
+          <div class="req">
+            <div class="icon-box sm"><svg class="icon icon-sm"><use href="#i-layers"/></svg></div>
+            <h3>Core stack</h3>
+            <p>PySide6 (Qt Quick / QML), yt-dlp, Mutagen</p>
+          </div>
+        </div>
+
+        <div class="two-col reveal">
+          <div>
+            <h3>Project layout</h3>
+            <div class="code">
+              <div class="code-head"><span>Media-Studio/</span><button class="copy" data-copy="layout-code"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
+<pre id="layout-code">Media-Studio/
+├── app.py                 # Desktop application entry point
+├── requirements.txt       # Python dependencies
+├── builder.bat            # Windows PyInstaller builder
+├── run_windows.bat        # Windows development launcher
+├── run_linux.sh           # Linux development launcher
+└── ums/
+    ├── config.py
+    ├── engine.py
+    ├── music.py
+    ├── presets.py
+    ├── qml_bridge.py
+    ├── workers.py
+    └── qml/
+        ├── Main.qml
+        └── icon.qml</pre>
+            </div>
+          </div>
+
+          <div>
+            <h3>Troubleshooting</h3>
+            <div class="stack">
+              <div class="trouble">
+                <h4>FFmpeg not detected</h4>
+                <p>Add its bin folder to PATH, or set the FFmpeg and FFprobe paths in Settings.</p>
+              </div>
+              <div class="trouble">
+                <h4>yt-dlp errors</h4>
+                <p>Upgrade yt-dlp — extractors change often. Some sites need a supported browser cookie profile.</p>
+              </div>
+              <div class="trouble">
+                <h4>Qt / QML errors</h4>
+                <p>Build with the same Python environment that has PySide6 installed and keep <code class="inline">ums/qml</code> intact.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Responsible use ============ -->
+    <section class="section">
+      <div class="container">
+        <div class="ethics reveal">
+          <div class="icon-box"><svg class="icon"><use href="#i-shield"/></svg></div>
+          <h3>Use it responsibly</h3>
+          <p>
+            Download only media you own or are authorized to save. Spotify links are used for public metadata
+            resolution only; this application does not use Spotify's authenticated Web API.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ Footer ============ -->
+  <footer class="site-footer">
+    <div class="container foot-inner">
+      <a href="#top" class="brand">
+        <div class="logo sm" aria-hidden="true">
+          <span style="--h:11px;--d:0s"></span><span style="--h:18px;--d:.12s"></span><span style="--h:22px;--d:.24s"></span>
+          <span style="--h:14px;--d:.36s"></span><span style="--h:20px;--d:.48s"></span><span style="--h:12px;--d:.6s"></span><span style="--h:16px;--d:.72s"></span>
+        </div>
+        <span style="font-size:.875rem;font-weight:600;color:#fff">Universal Media Studio</span>
+      </a>
+      <nav class="foot-links">
+        <a href="#features">Features</a>
+        <a href="#hub">Music Hub</a>
+        <a href="#install">Install</a>
+        <a href="#requirements">Requirements</a>
+      </nav>
+      <p class="foot-note">Built with PySide6, QML, yt-dlp &amp; Mutagen · © <span id="year"></span></p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      document.documentElement.classList.add('js');
+
+      // Footer year
+      var year = document.getElementById('year');
+      if (year) year.textContent = new Date().getFullYear();
+
+      // Mobile menu
+      var menuBtn = document.getElementById('menu-btn');
+      var navLinks = document.getElementById('nav-links');
+      function setMenu(open) {
+        navLinks.classList.toggle('open', open);
+        menuBtn.setAttribute('aria-expanded', String(open));
+        menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        menuBtn.innerHTML = '<svg class="icon"><use href="#' + (open ? 'i-close' : 'i-menu') + '"/></svg>';
+      }
+      menuBtn.addEventListener('click', function () {
+        setMenu(!navLinks.classList.contains('open'));
+      });
+      navLinks.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () { setMenu(false); });
+      });
+
+      // Install tabs
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+      function selectTab(tab) {
+        tabs.forEach(function (t) {
+          var active = t === tab;
+          t.setAttribute('aria-selected', String(active));
+          t.tabIndex = active ? 0 : -1;
+          document.getElementById(t.getAttribute('aria-controls')).hidden = !active;
+        });
+        tab.focus();
+      }
+      tabs.forEach(function (t, i) {
+        t.addEventListener('click', function () { selectTab(t); });
+        t.addEventListener('keydown', function (e) {
+          var next = null;
+          if (e.key === 'ArrowRight') next = tabs[(i + 1) % tabs.length];
+          if (e.key === 'ArrowLeft') next = tabs[(i - 1 + tabs.length) % tabs.length];
+          if (next) { e.preventDefault(); selectTab(next); }
+        });
+      });
+
+      // Copy buttons
+      document.querySelectorAll('.copy').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var source = document.getElementById(btn.getAttribute('data-copy'));
+          var text = source ? source.textContent : '';
+          var done = function () {
+            var original = btn.innerHTML;
+            btn.classList.add('done');
+            btn.innerHTML = '<svg class="icon icon-xs"><use href="#i-check"/></svg>Copied';
+            setTimeout(function () {
+              btn.classList.remove('done');
+              btn.innerHTML = original;
+            }, 1600);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+          } else {
+            fallbackCopy(text);
+            done();
+          }
+        });
+      });
+
+      function fallbackCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+        document.body.removeChild(ta);
+      }
+
+      // Scroll reveal
+      var items = document.querySelectorAll('.reveal');
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('in');
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.12 });
+        items.forEach(function (el) { io.observe(el); });
+      } else {
+        items.forEach(function (el) { el.classList.add('in'); });
+      }
+    })();
+  </script>
+</body>
+</html>

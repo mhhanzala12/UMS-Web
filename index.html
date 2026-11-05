@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Universal Media Studio — Download &amp; Media Utility</title>
-  <meta name="description" content="Universal Media Studio is a local desktop app for media downloading, conversion, and a music hub, built with PySide6 and QML." />
+  <title>Universal Media Studio — yt-dlp + FFmpeg Desktop GUI</title>
+  <meta name="description" content="Universal Media Studio is a local-first desktop GUI for yt-dlp and FFmpeg, with a downloader, encoding panel, queue, and native music workspace. Built with PySide6 and QML." />
   <meta name="theme-color" content="#0a0c09" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c5f04a'/%3E%3Cpath d='M8 14v4M12 10v12M16 7v18M20 11v10M24 14v4' stroke='%230a0c09' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E" />
 
@@ -71,7 +71,6 @@
       animation: wave 1.4s ease-in-out infinite;
       animation-delay: var(--d);
     }
-    .logo.sm span { transform-origin: center; }
     @keyframes wave { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
 
     .badge {
@@ -82,7 +81,7 @@
 
     /* ---------- Buttons ---------- */
     .btn {
-      display: inline-flex; align-items: center; gap: 0.5rem;
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
       padding: 0.75rem 1.25rem; border-radius: 12px; border: 1px solid transparent;
       font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
       transition: background 0.2s, border-color 0.2s, color 0.2s;
@@ -135,7 +134,7 @@
       display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.85rem; border-radius: 999px;
       border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: var(--soft); font-size: 0.8rem;
     }
-    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 8px var(--lime); display: inline-block; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 8px var(--lime); display: inline-block; flex-shrink: 0; }
     .hero h1 {
       margin-top: 1.5rem; font-size: clamp(2.75rem, 7vw, 4.5rem); font-weight: 600;
       letter-spacing: -0.03em; line-height: 1.05; color: #fff;
@@ -145,6 +144,9 @@
     .hero-actions { margin-top: 2.25rem; display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
     .platforms { margin-top: 1.25rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; justify-content: center; font-size: 0.8rem; color: var(--dim); }
     .platforms .sep { opacity: 0.5; }
+    .hero-note { margin-top: 0.75rem; font-size: 0.8rem; color: var(--dim); }
+    .hero-note a { color: var(--soft); text-decoration: underline; text-underline-offset: 3px; }
+    .hero-note a:hover { color: var(--lime); }
 
     /* ---------- App mockup ---------- */
     .mockup-wrap { position: relative; max-width: 1000px; margin: 4rem auto 0; }
@@ -227,10 +229,17 @@
     }
     .row .state.queued { background: var(--lime); border-color: transparent; color: var(--bg); }
 
+    /* ---------- Stats strip ---------- */
+    .stats { display: grid; gap: 1rem; grid-template-columns: repeat(4, 1fr); }
+    .stat {
+      padding: 1.5rem; border-radius: 16px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02);
+    }
+    .stat b { display: block; font-size: 2rem; font-weight: 600; letter-spacing: -0.02em; color: var(--lime); line-height: 1; }
+    .stat span { display: block; margin-top: 0.6rem; font-size: 0.85rem; color: var(--muted); }
+
     /* ---------- Feature cards ---------- */
     .grid-4 { display: grid; gap: 1.25rem; grid-template-columns: repeat(4, 1fr); }
     .grid-3 { display: grid; gap: 1.25rem; grid-template-columns: repeat(3, 1fr); }
-    .grid-2 { display: grid; gap: 1.25rem; grid-template-columns: repeat(2, 1fr); }
     .card {
       position: relative; overflow: hidden; padding: 1.5rem; border-radius: 16px;
       border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02);
@@ -244,12 +253,12 @@
     .card:hover .glow-dot { opacity: 1; }
     .icon-box {
       width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-      border: 1px solid rgba(197, 240, 74, 0.25); background: rgba(197, 240, 74, 0.1); color: var(--lime);
+      border: 1px solid rgba(197, 240, 74, 0.25); background: rgba(197, 240, 74, 0.1); color: var(--lime); flex-shrink: 0;
     }
     .icon-box.solid { background: var(--lime); color: var(--bg); border: none; }
     .icon-box.sm { width: 36px; height: 36px; border-radius: 10px; border: none; background: rgba(197, 240, 74, 0.1); }
     .card h3 { position: relative; margin-top: 1.25rem; font-size: 1.1rem; font-weight: 600; color: #fff; }
-    .card p { position: relative; margin-top: 0.5rem; font-size: 0.9rem; color: var(--muted); }
+    .card > p { position: relative; margin-top: 0.5rem; font-size: 0.9rem; color: var(--muted); }
     .card ul { position: relative; list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: 0.6rem; }
     .card li { display: flex; gap: 0.6rem; align-items: flex-start; font-size: 0.875rem; color: var(--soft); }
     .tick {
@@ -258,15 +267,20 @@
     }
     .tick .icon { width: 10px; height: 10px; stroke-width: 3; }
 
-    /* ---------- Music hub ---------- */
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: center; }
-    .hub-copy h2 { font-size: clamp(1.9rem, 4vw, 2.5rem); }
-    .hub-copy p.lead-sm { margin-top: 1.25rem; color: var(--muted); }
-    .pills { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    /* ---------- Profiles ---------- */
+    .profiles { margin-top: 3rem; text-align: center; }
+    .profiles h3 { font-size: 1rem; font-weight: 600; color: #fff; }
+    .profiles > p { margin-top: 0.5rem; font-size: 0.9rem; color: var(--muted); }
+    .pills { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
     .pill-lg {
       display: inline-flex; align-items: center; gap: 0.5rem; padding: 6px 14px; border-radius: 999px;
-      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: #d4d9cc; font-size: 0.9rem;
+      border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: #d4d9cc; font-size: 0.875rem;
     }
+
+    /* ---------- Music hub ---------- */
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: center; }
+    .hub-copy .section-title { margin-top: 0.75rem; }
+    .lead-sm { margin-top: 1.25rem; color: var(--muted); }
     .feat-list { margin: 2rem 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .feat-list li { display: flex; gap: 0.75rem; }
     .feat-list strong { display: block; font-size: 0.9rem; color: #fff; font-weight: 600; }
@@ -278,10 +292,11 @@
     .panel-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
     .panel-head h3 { font-size: 1.5rem; font-weight: 600; color: #fff; }
     .panel-head p { margin-top: 0.25rem; font-size: 0.875rem; color: var(--dim); }
-    .seg { display: flex; padding: 4px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); font-size: 0.8rem; }
+    .seg { display: flex; flex-wrap: wrap; padding: 4px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); font-size: 0.8rem; }
     .seg span { display: flex; align-items: center; gap: 0.5rem; padding: 6px 12px; border-radius: 8px; color: var(--muted); }
     .seg span.on { background: rgba(255, 255, 255, 0.1); color: #fff; }
     .seg span.on b { color: var(--lime); font-weight: 600; }
+    .seg b { font-weight: 600; color: var(--dim); }
     .empty {
       margin-top: 2rem; padding: 3.5rem 1.5rem; text-align: center; border-radius: 12px;
       border: 1px dashed var(--line); display: flex; flex-direction: column; align-items: center;
@@ -289,6 +304,13 @@
     .empty h4 { margin-top: 1.25rem; font-size: 1rem; font-weight: 600; color: #fff; }
     .empty p { margin-top: 0.5rem; max-width: 20rem; font-size: 0.875rem; color: var(--muted); }
     .empty .btn { margin-top: 1.5rem; }
+    .src-list { margin-top: 1.75rem; display: grid; gap: 0.6rem; }
+    .src {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; border-radius: 12px;
+      border: 1px solid var(--line-soft); background: rgba(255, 255, 255, 0.02); font-size: 0.875rem;
+    }
+    .src strong { color: #fff; font-weight: 600; }
+    .src span { margin-left: auto; font-size: 0.75rem; color: var(--dim); text-align: right; }
 
     /* ---------- How it works ---------- */
     .step { padding: 1.75rem; border-radius: 16px; border: 1px solid var(--line); background: linear-gradient(to bottom, rgba(255, 255, 255, 0.04), transparent); }
@@ -299,6 +321,15 @@
 
     /* ---------- Install ---------- */
     .install-wrap { max-width: 56rem; margin: 3rem auto 0; }
+    .clone-card {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem;
+      padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(197, 240, 74, 0.25);
+      background: linear-gradient(135deg, rgba(197, 240, 74, 0.08), transparent 70%);
+      margin-bottom: 1.5rem;
+    }
+    .clone-card h3 { font-size: 1.1rem; font-weight: 600; color: #fff; }
+    .clone-card p { margin-top: 0.35rem; font-size: 0.875rem; color: var(--muted); }
+    .clone-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; }
     .tablist {
       display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 6px; border-radius: 16px;
       border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02);
@@ -345,6 +376,7 @@
       border: 1px solid rgba(197, 240, 74, 0.2); background: rgba(197, 240, 74, 0.05); color: #d4d9cc; font-size: 0.9rem;
     }
     .notice .icon { color: var(--lime); margin-top: 2px; }
+    .notice p { margin: 0; }
 
     /* ---------- Requirements ---------- */
     .req { padding: 1.25rem; border-radius: 16px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); }
@@ -357,6 +389,15 @@
     .trouble h4 { font-size: 0.9rem; font-weight: 600; color: #fff; }
     .trouble p { margin-top: 0.25rem; font-size: 0.875rem; color: var(--muted); }
     .stack { display: grid; gap: 1rem; align-content: start; }
+    .bullets { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.75rem; }
+    .bullets li { display: flex; gap: 0.75rem; font-size: 0.9rem; color: var(--soft); }
+    .bullets li .tick { margin-top: 2px; }
+    .bullets li.warn .tick { background: rgba(255, 180, 80, 0.15); color: #ffb450; }
+    .heading-row { margin-top: 3rem; }
+    .heading-row h3 { font-size: 0.95rem; font-weight: 600; color: #fff; margin-bottom: 0.75rem; }
+    .col-card { padding: 1.75rem; border-radius: 16px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02); }
+    .col-card h3 { margin-bottom: 1rem !important; }
+    .sub-grid { margin-top: 1.5rem; }
 
     /* ---------- Responsible use ---------- */
     .ethics {
@@ -382,6 +423,7 @@
     /* ---------- Responsive ---------- */
     @media (max-width: 1024px) {
       .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .stats { grid-template-columns: repeat(2, 1fr); }
       .split { grid-template-columns: 1fr; gap: 2.5rem; }
       .two-col { grid-template-columns: 1fr; }
     }
@@ -407,7 +449,7 @@
       .app-main { padding: 1.5rem; }
     }
     @media (max-width: 640px) {
-      .grid-4, .grid-2, .feat-list { grid-template-columns: 1fr; }
+      .grid-4, .feat-list { grid-template-columns: 1fr; }
       .app-side { width: 56px; }
       .app-search-top { display: none; }
       .app-body { min-height: 360px; }
@@ -415,6 +457,10 @@
       .tab-panel { padding: 1.25rem; }
       .ethics { padding: 1.75rem; }
       .panel { padding: 1.1rem; }
+      .col-card { padding: 1.25rem; }
+      .stats { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+      .stat { padding: 1rem; }
+      .stat b { font-size: 1.5rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -447,6 +493,9 @@
     <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
     <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
   </svg>
 
   <!-- ============ Header ============ -->
@@ -469,11 +518,12 @@
         <a href="#how">How it works</a>
         <a href="#install">Install</a>
         <a href="#requirements">Requirements</a>
+        <a href="#limits">Limitations</a>
       </nav>
 
       <div style="display:flex;align-items:center;gap:.5rem">
-        <a href="#install" class="btn btn-primary btn-sm nav-cta">
-          <svg class="icon icon-sm"><use href="#i-download"/></svg> Get the app
+        <a href="https://github.com/mhhanzala12/UMS" target="_blank" rel="noopener" class="btn btn-primary btn-sm nav-cta">
+          <svg class="icon icon-sm"><use href="#i-download"/></svg> Download
         </a>
         <button class="menu-btn" id="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">
           <svg class="icon"><use href="#i-menu"/></svg>
@@ -490,22 +540,28 @@
       <div class="glow" aria-hidden="true"></div>
 
       <div class="container hero-inner reveal">
-        <span class="pill"><span class="dot"></span> Local desktop app · PySide6 + QML · Python 3.10+</span>
+        <span class="pill"><span class="dot"></span> Local-first desktop GUI · yt-dlp + FFmpeg · Python 3.10+</span>
         <h1>Universal <em>Media</em> Studio</h1>
         <p class="lead">
-          One local desktop utility for media downloading, conversion, and a music hub. Inspect URLs, queue downloads
-          with yt-dlp, convert files with FFmpeg, and manage your offline audio library and playlists.
+          A simple downloader for everyday use and a deeper encoding panel when you need it. Analyze URLs, queue
+          downloads with yt-dlp, convert and remux with FFmpeg, and manage a local music library and playlists, all
+          on your own machine.
         </p>
         <div class="hero-actions">
-          <a href="#install" class="btn btn-primary">
-            <svg class="icon icon-sm"><use href="#i-download"/></svg> Install on Windows
+          <a href="https://github.com/mhhanzala12/UMS" target="_blank" rel="noopener" class="btn btn-primary">
+            <svg class="icon icon-sm"><use href="#i-download"/></svg> Download from GitHub
           </a>
-          <a href="#install" class="btn btn-ghost">
-            <svg class="icon icon-sm"><use href="#i-terminal"/></svg> Run from source
+          <a href="https://github.com/mhhanzala12/UMS#readme" target="_blank" rel="noopener" class="btn btn-ghost">
+            <svg class="icon icon-sm"><use href="#i-external"/></svg> Read the README
           </a>
         </div>
         <p class="platforms">
           <span>Windows 10/11</span><span class="sep">•</span><span>Linux</span><span class="sep">•</span><span>macOS</span><span class="sep">•</span><span>Free &amp; local</span>
+        </p>
+        <p class="hero-note">
+          No releases are published yet. Get the source from the
+          <a href="https://github.com/mhhanzala12/UMS" target="_blank" rel="noopener">repository</a>
+          or <a href="https://github.com/mhhanzala12/UMS/archive/refs/heads/main.zip" rel="noopener">download the ZIP</a>.
         </p>
 
         <!-- App window mockup -->
@@ -595,13 +651,25 @@
       </div>
     </section>
 
+    <!-- ============ At a glance ============ -->
+    <section class="section" style="padding-top:4rem">
+      <div class="container">
+        <div class="stats reveal">
+          <div class="stat"><b>19</b><span>Output containers, from MP4 and MKV to MP3, FLAC and WAV</span></div>
+          <div class="stat"><b>9</b><span>Video codec choices, including H.264, HEVC, AV1 and VP9</span></div>
+          <div class="stat"><b>12</b><span>Built-in profiles, plus custom presets you save locally</span></div>
+          <div class="stat"><b>0</b><span>Analytics, telemetry, or cloud conversion services</span></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ Features ============ -->
     <section id="features" class="section">
       <div class="container">
         <div class="section-head reveal">
           <p class="eyebrow">Features</p>
           <h2 class="section-title">Everything your media workflow needs</h2>
-          <p class="section-desc">Four focused tools, one desktop app. Built for people who want control over their local media.</p>
+          <p class="section-desc">Four focused areas in one local desktop app. Every download and conversion runs on your machine.</p>
         </div>
 
         <div class="grid-4 reveal" style="margin-top:3.5rem">
@@ -609,49 +677,76 @@
             <div class="glow-dot"></div>
             <div class="icon-box"><svg class="icon"><use href="#i-link"/></svg></div>
             <h3>Downloader</h3>
-            <p>Inspect supported media URLs, choose source quality and output formats, and queue downloads with yt-dlp.</p>
+            <p>Analyze a URL and pick exactly the source you want with yt-dlp.</p>
             <ul>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Quality &amp; format selection</li>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Background download queue</li>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Browser cookie profiles</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>List formats yt-dlp exposes for a URL</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Best video + audio, audio-only, or capped resolution</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Batch URLs, one per line, and playlists</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Subtitles, auto-captions, and thumbnails</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Retries, proxy modes, and browser cookie reuse</li>
             </ul>
           </article>
 
           <article class="card">
             <div class="glow-dot"></div>
             <div class="icon-box"><svg class="icon"><use href="#i-convert"/></svg></div>
-            <h3>Media Converter</h3>
-            <p>Convert local audio and video files with FFmpeg without leaving the app.</p>
+            <h3>FFmpeg Conversion</h3>
+            <p>Convert or remux local files and downloads with FFmpeg, from quick copies to full encoding control.</p>
             <ul>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Audio &amp; video conversion</li>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>FFmpeg / FFprobe powered</li>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Reusable download presets</li>
-            </ul>
-          </article>
-
-          <article class="card">
-            <div class="glow-dot"></div>
-            <div class="icon-box"><svg class="icon"><use href="#i-music"/></svg></div>
-            <h3>Music Hub</h3>
-            <p>Search music catalogs, resolve public Spotify metadata, and fetch matching audio for your library.</p>
-            <ul>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Track, album &amp; playlist metadata</li>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Local audio library</li>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Custom playlists</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Copy-remux without re-encoding</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>H.264, HEVC, AV1, VP9, and more</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>CRF, CBR, and VBR rate control</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>FPS, resolution, 10-bit, and color options</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>NVENC, QSV, or AMF where your build supports them</li>
             </ul>
           </article>
 
           <article class="card">
             <div class="glow-dot"></div>
             <div class="icon-box"><svg class="icon"><use href="#i-layers"/></svg></div>
-            <h3>Queue &amp; Settings</h3>
-            <p>Monitor background tasks and configure output folders, connections, cookies, and presets.</p>
+            <h3>Queue &amp; Presets</h3>
+            <p>Sequential background work with full visibility, plus reusable profiles.</p>
             <ul>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Live task monitoring</li>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Output folder control</li>
-              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Connection &amp; cookie settings</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Cancel, retry, and reorder queued tasks</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Per-task logs and session history</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Custom presets saved locally</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Smallest File, Mobile, Archive, Audio Only and more</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Output folder and tool paths in Settings</li>
             </ul>
           </article>
+
+          <article class="card">
+            <div class="glow-dot"></div>
+            <div class="icon-box"><svg class="icon"><use href="#i-music"/></svg></div>
+            <h3>Music Workspace</h3>
+            <p>Discover music, match it to audio, and keep a tagged local library with playlists.</p>
+            <ul>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Search Deezer, Apple Music, YouTube, SoundCloud</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Public Spotify metadata, no API keys needed</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Lyrics lookup via LRCLIB</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Library with artwork, tags, and favorites</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Local playlists with M3U / M3U8 import &amp; export</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="profiles reveal">
+          <h3>Built-in profiles</h3>
+          <p>Start from a profile, then open advanced controls only when you need them.</p>
+          <div class="pills">
+            <span class="pill-lg">Best Available Quality</span>
+            <span class="pill-lg">Smallest File</span>
+            <span class="pill-lg">Balanced Quality and Size</span>
+            <span class="pill-lg">Mobile Compatible</span>
+            <span class="pill-lg">Low-End Device</span>
+            <span class="pill-lg">Social Media Share</span>
+            <span class="pill-lg">Archive Quality</span>
+            <span class="pill-lg">Audio Only</span>
+            <span class="pill-lg">Lossless Audio</span>
+            <span class="pill-lg">3GP Legacy Mobile</span>
+            <span class="pill-lg">MP4 Universal Compatibility</span>
+            <span class="pill-lg">Web Optimized</span>
+          </div>
         </div>
       </div>
     </section>
@@ -661,36 +756,35 @@
       <div class="container split">
         <div class="hub-copy reveal">
           <p class="eyebrow">Music Hub</p>
-          <h2 class="section-title" style="margin-top:.75rem">Search, resolve, and build your own offline library</h2>
+          <h2 class="section-title">Discover, match, and keep your own offline library</h2>
           <p class="lead-sm">
-            Search by track, album, or artist — or paste a public Spotify link. Universal Media Studio resolves the
-            metadata, finds matching audio with yt-dlp, and keeps everything organized in a local library you control.
+            Search catalogs, paste a public Spotify link, and let yt-dlp find matching audio. FFmpeg converts and tags
+            the result, and Mutagen reads your local library tags and artwork. Everything lands in a folder you choose.
           </p>
 
-          <div class="pills">
-            <span class="pill-lg"><span class="dot"></span>Spotify</span>
-            <span class="pill-lg"><span class="dot"></span>YouTube Music</span>
-            <span class="pill-lg"><span class="dot"></span>SoundCloud</span>
-            <span class="pill-lg"><span class="dot"></span>Deezer</span>
-            <span class="pill-lg"><span class="dot"></span>Apple Music</span>
+          <div class="src-list">
+            <div class="src"><span class="dot"></span><strong>Deezer &amp; Apple Music</strong><span>Track metadata &amp; previews</span></div>
+            <div class="src"><span class="dot"></span><strong>YouTube &amp; SoundCloud</strong><span>Search via yt-dlp</span></div>
+            <div class="src"><span class="dot"></span><strong>Spotify (public)</strong><span>Track, album &amp; playlist metadata</span></div>
+            <div class="src"><span class="dot"></span><strong>LRCLIB</strong><span>Lyrics lookup</span></div>
           </div>
 
           <ul class="feat-list">
             <li>
               <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-library"/></svg></span>
-              <div><strong>Local library</strong><span>Scan and browse audio you've saved.</span></div>
+              <div><strong>Searchable library</strong><span>Sort, favorite, and play local audio.</span></div>
             </li>
             <li>
               <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-playlist"/></svg></span>
-              <div><strong>Playlists</strong><span>Group tracks into playlists you own.</span></div>
+              <div><strong>Local playlists</strong><span>Reference files on disk without moving them.</span></div>
             </li>
             <li>
-              <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-search"/></svg></span>
-              <div><strong>Metadata lookup</strong><span>Public track, album &amp; playlist info.</span></div>
+              <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-music"/></svg></span>
+              <div><strong>Persistent player</strong><span>Previous, play/pause, next, seek, and volume.</span></div>
             </li>
             <li>
-              <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-download"/></svg></span>
-              <div><strong>Matched audio</strong><span>yt-dlp fetches the best match.</span></div>
+              <span class="icon-box sm"><svg class="icon icon-sm"><use href="#i-film"/></svg></span>
+              <div><strong>Tags &amp; artwork</strong><span>Embedded covers and metadata via FFmpeg and Mutagen.</span></div>
             </li>
           </ul>
         </div>
@@ -699,21 +793,21 @@
           <div class="panel-head">
             <div>
               <h3>Downloads</h3>
-              <p id="finished-count">0 finished</p>
+              <p>0 finished</p>
             </div>
             <div class="seg" role="presentation">
               <span class="on">All <b>0</b></span>
-              <span>Downloading <b style="color:var(--dim)">0</b></span>
-              <span>Completed <b style="color:var(--dim)">0</b></span>
+              <span>Downloading <b>0</b></span>
+              <span>Completed <b>0</b></span>
             </div>
           </div>
 
           <div class="empty">
             <div class="icon-box"><svg class="icon"><use href="#i-download"/></svg></div>
             <h4>No downloads yet</h4>
-            <p>Search for a track, album, or artist to start building your offline music library.</p>
-            <a href="#features" class="btn btn-primary">
-              <svg class="icon icon-sm"><use href="#i-search"/></svg> Search &amp; Explore
+            <p>Search for a track, album, or artist, or paste a supported link, to start building your offline music library.</p>
+            <a href="https://github.com/mhhanzala12/UMS" target="_blank" rel="noopener" class="btn btn-primary">
+              <svg class="icon icon-sm"><use href="#i-download"/></svg> Get the app
             </a>
           </div>
         </div>
@@ -725,35 +819,38 @@
       <div class="container">
         <div class="section-head reveal">
           <p class="eyebrow">How it works</p>
-          <h2 class="section-title">From link to library in three steps</h2>
+          <h2 class="section-title">From link to file in four steps</h2>
         </div>
 
         <div class="grid-3 reveal" style="margin-top:3.5rem">
           <div class="step">
             <div class="step-top">
-              <div class="icon-box solid"><svg class="icon"><use href="#i-search"/></svg></div>
+              <div class="icon-box solid"><svg class="icon"><use href="#i-link"/></svg></div>
               <span class="step-n">01</span>
             </div>
-            <h3>Search or paste a link</h3>
-            <p>Look up a track, album, or artist, or paste a supported media URL in the Downloader.</p>
+            <h3>Analyze the URL</h3>
+            <p>Open the Downloader, paste one or more links, and click Analyze to see the formats yt-dlp can access.</p>
           </div>
           <div class="step">
             <div class="step-top">
               <div class="icon-box solid"><svg class="icon"><use href="#i-settings"/></svg></div>
               <span class="step-n">02</span>
             </div>
-            <h3>Pick quality &amp; format</h3>
-            <p>Choose the source quality and output format, or apply one of your saved presets.</p>
+            <h3>Choose quality &amp; format</h3>
+            <p>Select a source quality and output container, or pick a preset. "Original" keeps the file as downloaded.</p>
           </div>
           <div class="step">
             <div class="step-top">
               <div class="icon-box solid"><svg class="icon"><use href="#i-layers"/></svg></div>
               <span class="step-n">03</span>
             </div>
-            <h3>Queue &amp; organize</h3>
-            <p>Track progress in the queue, then manage your library and playlists when downloads finish.</p>
+            <h3>Queue the task</h3>
+            <p>Open the Queue to watch progress and logs, cancel or retry tasks, and reorder what runs next.</p>
           </div>
         </div>
+        <p class="section-desc reveal" style="text-align:center;margin-top:2rem">
+          Have local files? Use the <strong style="color:#fff;font-weight:600">Converter</strong> to queue one or more FFmpeg jobs.
+        </p>
       </div>
     </section>
 
@@ -763,16 +860,31 @@
         <div class="section-head reveal">
           <p class="eyebrow">Install</p>
           <h2 class="section-title">Get Universal Media Studio running</h2>
-          <p class="section-desc">Clone the repository and launch the app with a single script, or set it up manually.</p>
+          <p class="section-desc">Clone the repository and start the app with the launcher for your platform, or set it up manually.</p>
         </div>
 
         <div class="install-wrap reveal">
+          <div class="clone-card">
+            <div>
+              <h3>Get the code</h3>
+              <p>Clone the repository, or download the main branch as a ZIP and extract it.</p>
+            </div>
+            <div class="clone-actions">
+              <a href="https://github.com/mhhanzala12/UMS" target="_blank" rel="noopener" class="btn btn-primary btn-sm">
+                <svg class="icon icon-sm"><use href="#i-external"/></svg> Open repository
+              </a>
+              <a href="https://github.com/mhhanzala12/UMS/archive/refs/heads/main.zip" rel="noopener" class="btn btn-ghost btn-sm">
+                <svg class="icon icon-sm"><use href="#i-download"/></svg> Download ZIP
+              </a>
+            </div>
+          </div>
+
           <div class="tablist" role="tablist" aria-label="Install options">
             <button class="tab" role="tab" id="tab-win" aria-controls="panel-win" aria-selected="true" data-tab="win">
               <svg class="icon icon-sm"><use href="#i-terminal"/></svg> Windows
             </button>
             <button class="tab" role="tab" id="tab-linux" aria-controls="panel-linux" aria-selected="false" tabindex="-1" data-tab="linux">
-              <svg class="icon icon-sm"><use href="#i-terminal"/></svg> Linux
+              <svg class="icon icon-sm"><use href="#i-terminal"/></svg> Linux / macOS
             </button>
             <button class="tab" role="tab" id="tab-build" aria-controls="panel-build" aria-selected="false" tabindex="-1" data-tab="build">
               <svg class="icon icon-sm"><use href="#i-download"/></svg> Build .exe
@@ -783,14 +895,17 @@
           <div class="tab-panel" role="tabpanel" id="panel-win" aria-labelledby="tab-win">
             <h3>Quick start with the launcher</h3>
             <ol class="steps-ol">
-              <li>Clone the repository and open its folder.</li>
-              <li>Run <code class="inline">run_windows.bat</code> — it creates <code class="inline">.venv</code>, installs requirements, and starts the app.</li>
+              <li>Install Python 3.10+ from <a href="https://www.python.org/downloads/" target="_blank" rel="noopener" style="color:var(--lime)">python.org</a> and enable <strong style="color:#fff">Add Python to PATH</strong>.</li>
+              <li>Install FFmpeg from a trusted distribution and add its <code class="inline">bin</code> folder to PATH, or set the executable paths in the app's Settings.</li>
+              <li>Double-click <code class="inline">run_windows.bat</code>. The first launch creates <code class="inline">.venv</code>, installs PySide6 and yt-dlp, then opens the app.</li>
             </ol>
 
             <p class="sub-title">Or set up manually</p>
             <div class="code">
               <div class="code-head"><span>PowerShell / Command Prompt</span><button class="copy" data-copy="win-code"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
-<pre id="win-code">py -3 -m venv .venv
+<pre id="win-code">git clone https://github.com/mhhanzala12/UMS.git
+cd UMS
+py -3 -m venv .venv
 .venv\Scripts\activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
@@ -798,42 +913,52 @@ python app.py</pre>
             </div>
           </div>
 
-          <!-- Linux -->
+          <!-- Linux / macOS -->
           <div class="tab-panel" role="tabpanel" id="panel-linux" aria-labelledby="tab-linux" hidden>
-            <h3>Set up a virtual environment</h3>
-            <p>Run <code class="inline">run_linux.sh</code> for the development launcher, or follow the manual steps below.</p>
+            <h3>Run on Linux or macOS</h3>
+            <p>Install Python 3.10+ and FFmpeg first, plus the Qt runtime libraries on many Linux distributions. Then run the launcher, or follow the manual steps.</p>
 
-            <p class="sub-title">Terminal</p>
+            <p class="sub-title">Launcher</p>
+            <div class="code">
+              <div class="code-head"><span>Terminal</span><button class="copy" data-copy="linux-launch"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
+<pre id="linux-launch">git clone https://github.com/mhhanzala12/UMS.git
+cd UMS
+chmod +x run_linux.sh
+./run_linux.sh</pre>
+            </div>
+
+            <p class="sub-title">Manual setup</p>
             <div class="code">
               <div class="code-head"><span>Terminal</span><button class="copy" data-copy="linux-code"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
 <pre id="linux-code">python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
+. .venv/bin/activate
 python -m pip install -r requirements.txt
 python app.py</pre>
+            </div>
+
+            <div class="notice">
+              <svg class="icon icon-sm"><use href="#i-alert"/></svg>
+              <p>The original Widgets UI is still available as a fallback with <code class="inline">python legacy_app.py</code> (Windows: <code class="inline">run_legacy_windows.bat</code>).</p>
             </div>
           </div>
 
           <!-- Build -->
           <div class="tab-panel" role="tabpanel" id="panel-build" aria-labelledby="tab-build" hidden>
-            <h3>Build a standalone Windows executable</h3>
+            <h3>Build a Windows app folder</h3>
             <p>
-              The included builder installs dependencies and PyInstaller in <code class="inline">.venv</code>, bundles the QML
-              interface, and produces an onedir build for faster startup and easy troubleshooting.
+              Run <code class="inline">build_windows_exe.bat</code> to create an optional Windows app folder with PyInstaller.
+              The script includes the QML directory as application data.
             </p>
 
             <p class="sub-title">Command Prompt</p>
             <div class="code">
               <div class="code-head"><span>Command Prompt</span><button class="copy" data-copy="build-code"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
-<pre id="build-code">builder.bat
-
-# Output:
-# dist/Universal Media Studio/Universal Media Studio.exe</pre>
+<pre id="build-code">build_windows_exe.bat</pre>
             </div>
 
             <div class="notice">
               <svg class="icon icon-sm"><use href="#i-alert"/></svg>
-              <p>Distribute the entire output folder, not just the executable. FFmpeg can be bundled from project-local locations or installed on your system PATH.</p>
+              <p>FFmpeg and ffprobe are not bundled. Distribute the output folder and make sure FFmpeg is installed on the target machine or configured in Settings.</p>
             </div>
           </div>
         </div>
@@ -853,7 +978,7 @@ python app.py</pre>
           <div class="req">
             <div class="icon-box sm"><svg class="icon icon-sm"><use href="#i-terminal"/></svg></div>
             <h3>Operating system</h3>
-            <p>Windows 10/11, Linux, or macOS</p>
+            <p>Windows 10/11, Linux, or macOS desktop</p>
           </div>
           <div class="req">
             <div class="icon-box sm"><svg class="icon icon-sm"><use href="#i-terminal"/></svg></div>
@@ -862,13 +987,13 @@ python app.py</pre>
           </div>
           <div class="req">
             <div class="icon-box sm"><svg class="icon icon-sm"><use href="#i-film"/></svg></div>
-            <h3>FFmpeg &amp; FFprobe</h3>
-            <p>On PATH for conversion and audio post-processing</p>
+            <h3>FFmpeg &amp; ffprobe</h3>
+            <p>Needed for merging, conversion, codec controls, and subtitle embedding. Not bundled.</p>
           </div>
           <div class="req">
             <div class="icon-box sm"><svg class="icon icon-sm"><use href="#i-layers"/></svg></div>
             <h3>Core stack</h3>
-            <p>PySide6 (Qt Quick / QML), yt-dlp, Mutagen</p>
+            <p>PySide6 (Qt Quick / QML), yt-dlp[default], Mutagen</p>
           </div>
         </div>
 
@@ -876,23 +1001,32 @@ python app.py</pre>
           <div>
             <h3>Project layout</h3>
             <div class="code">
-              <div class="code-head"><span>Media-Studio/</span><button class="copy" data-copy="layout-code"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
-<pre id="layout-code">Media-Studio/
-├── app.py                 # Desktop application entry point
-├── requirements.txt       # Python dependencies
-├── builder.bat            # Windows PyInstaller builder
-├── run_windows.bat        # Windows development launcher
-├── run_linux.sh           # Linux development launcher
+              <div class="code-head"><span>UniversalMediaStudio/</span><button class="copy" data-copy="layout-code"><svg class="icon icon-xs"><use href="#i-copy"/></svg>Copy</button></div>
+<pre id="layout-code">UniversalMediaStudio/
+├── app.py
+├── requirements.txt
+├── run_windows.bat
+├── run_linux.sh
+├── build_windows_exe.bat
+├── README.md
+├── LICENSE
 └── ums/
     ├── config.py
     ├── engine.py
-    ├── music.py
     ├── presets.py
-    ├── qml_bridge.py
-    ├── workers.py
-    └── qml/
-        ├── Main.qml
-        └── icon.qml</pre>
+    ├── ui.py
+    └── workers.py</pre>
+            </div>
+
+            <div class="heading-row">
+              <h3>YouTube support</h3>
+              <div class="col-card">
+                <ul class="bullets">
+                  <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Install <strong style="color:#fff">Deno</strong> (or another yt-dlp-supported JavaScript runtime) and put it on PATH.</li>
+                  <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Keep yt-dlp current: <code class="inline">python -m pip install -U "yt-dlp[default]"</code></li>
+                  <li><span class="tick"><svg class="icon"><use href="#i-check"/></svg></span>Connection settings support system proxy, manual HTTP(S) proxy, or direct mode.</li>
+                </ul>
+              </div>
             </div>
           </div>
 
@@ -900,18 +1034,61 @@ python app.py</pre>
             <h3>Troubleshooting</h3>
             <div class="stack">
               <div class="trouble">
-                <h4>FFmpeg not detected</h4>
-                <p>Add its bin folder to PATH, or set the FFmpeg and FFprobe paths in Settings.</p>
+                <h4>yt-dlp missing or formats unavailable</h4>
+                <p>Upgrade yt-dlp with <code class="inline">python -m pip install -U "yt-dlp[default]"</code>, install Deno, then restart the app.</p>
               </div>
               <div class="trouble">
-                <h4>yt-dlp errors</h4>
-                <p>Upgrade yt-dlp — extractors change often. Some sites need a supported browser cookie profile.</p>
+                <h4>FFmpeg missing</h4>
+                <p>Install FFmpeg, restart the app, and check Settings → Detected tools.</p>
               </div>
               <div class="trouble">
-                <h4>Qt / QML errors</h4>
-                <p>Build with the same Python environment that has PySide6 installed and keep <code class="inline">ums/qml</code> intact.</p>
+                <h4>Separate streams fail to merge</h4>
+                <p>Install FFmpeg and make sure <code class="inline">ffmpeg</code> is on PATH.</p>
+              </div>
+              <div class="trouble">
+                <h4>Encoder not found</h4>
+                <p>Your FFmpeg build may not include that encoder. Choose another codec or install a build that has it.</p>
+              </div>
+              <div class="trouble">
+                <h4>Unsupported or protected URL</h4>
+                <p>Try a source with accessible, non-DRM media, and read the yt-dlp error in the Queue activity log.</p>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Limitations & privacy ============ -->
+    <section id="limits" class="section">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">Limitations &amp; privacy</p>
+          <h2 class="section-title">Clear about what it does and doesn't do</h2>
+        </div>
+
+        <div class="two-col reveal" style="margin-top:3.5rem">
+          <div class="col-card">
+            <h3>Known limitations</h3>
+            <ul class="bullets">
+              <li class="warn"><span class="tick"><svg class="icon"><use href="#i-x"/></svg></span>A desktop app, not a browser extension. It does not read the tab you have open.</li>
+              <li class="warn"><span class="tick"><svg class="icon"><use href="#i-x"/></svg></span>Does not bypass DRM, encryption, subscriptions, authentication, geo restrictions, or site access controls.</li>
+              <li class="warn"><span class="tick"><svg class="icon"><use href="#i-x"/></svg></span>Site support depends on yt-dlp and the site. No universal support is promised.</li>
+              <li class="warn"><span class="tick"><svg class="icon"><use href="#i-x"/></svg></span>Queue tasks run one at a time. Pause and resume are not exposed.</li>
+              <li class="warn"><span class="tick"><svg class="icon"><use href="#i-x"/></svg></span>No two-pass encoding, exact file-size targeting, or raw FFmpeg argument entry.</li>
+              <li class="warn"><span class="tick"><svg class="icon"><use href="#i-x"/></svg></span>Encoder and hardware acceleration depend on your FFmpeg build, GPU, and drivers.</li>
+            </ul>
+          </div>
+
+          <div class="col-card">
+            <h3>Privacy &amp; safety</h3>
+            <ul class="bullets">
+              <li><span class="tick"><svg class="icon"><use href="#i-lock"/></svg></span>URL inspection and processing run locally through yt-dlp and FFmpeg.</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-lock"/></svg></span>No analytics, telemetry, ad network, cloud conversion API, or media proxy.</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-lock"/></svg></span>Settings are stored in <code class="inline">~/.universal_media_studio/settings.json</code>.</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-lock"/></svg></span>Media is saved only to the output folder you choose.</li>
+              <li><span class="tick"><svg class="icon"><use href="#i-lock"/></svg></span>No FFmpeg binaries are bundled or downloaded silently.</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -925,7 +1102,7 @@ python app.py</pre>
           <h3>Use it responsibly</h3>
           <p>
             Download only media you own or are authorized to save. Spotify links are used for public metadata
-            resolution only; this application does not use Spotify's authenticated Web API.
+            resolution only; this application does not use Spotify's authenticated Web API or any Spotify credentials.
           </p>
         </div>
       </div>
@@ -945,9 +1122,10 @@ python app.py</pre>
       </a>
       <nav class="foot-links">
         <a href="#features">Features</a>
-        <a href="#hub">Music Hub</a>
         <a href="#install">Install</a>
         <a href="#requirements">Requirements</a>
+        <a href="https://github.com/mhhanzala12/UMS" target="_blank" rel="noopener">Repository</a>
+        <a href="https://github.com/mhhanzala12/UMS/blob/main/LICENSE" target="_blank" rel="noopener">License</a>
       </nav>
       <p class="foot-note">Built with PySide6, QML, yt-dlp &amp; Mutagen · © <span id="year"></span></p>
     </div>
@@ -1003,8 +1181,8 @@ python app.py</pre>
         btn.addEventListener('click', function () {
           var source = document.getElementById(btn.getAttribute('data-copy'));
           var text = source ? source.textContent : '';
+          var original = btn.innerHTML;
           var done = function () {
-            var original = btn.innerHTML;
             btn.classList.add('done');
             btn.innerHTML = '<svg class="icon icon-xs"><use href="#i-check"/></svg>Copied';
             setTimeout(function () {

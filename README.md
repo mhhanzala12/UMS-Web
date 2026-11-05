@@ -2,6 +2,8 @@
 
 A static, single-file marketing and download page for **Universal Media Studio**, a Python desktop media utility built with PySide6 and QML.
 
+The app itself lives at **https://github.com/mhhanzala12/UMS**. The page's download buttons link to that repository, and the "Download ZIP" link points to its `main` branch archive.
+
 The whole site lives in `index.html` (HTML + CSS + vanilla JavaScript). There is no framework and no build step required.
 
 ## Host it on GitHub Pages
